@@ -1,0 +1,51 @@
+# Pure Si crystal, structure created by LAMMPS, qeq off
+#=======Initialize Simulation===================================
+units		metal
+atom_style	atomic
+dimension       3
+boundary        p p f #BC's are periodic in X and Y, fixed in Z
+variable dt equal 0.001
+lattice  	diamond 5.43
+region		box block 0.0 3.0 0.0 3.0 0.0 8.0 units lattice
+create_box	1 box
+
+create_atoms	1 region box
+mass	1 29.0
+region crystal block EDGE EDGE EDGE EDGE 0.0 4.0 units lattice
+region amorphous block EDGE EDGE EDGE EDGE 4.0 8.0 units lattice
+
+group amo region amorphous
+group cry region crystal
+#=============Potential=================================================
+
+pair_style 	quip
+pair_coeff 	* * gap_example.xml "Potential xml_label=GAP_2015_2_20_0_10_54_35_765" 14
+
+#=========Modify Neighbors=================================
+neighbor	0.3 bin
+neigh_modify delay 10
+
+velocity all create 300.0 2398378 mom yes rot yes dist gaussian
+timestep        ${dt}
+
+thermo_style	custom step temp etotal pe vol density atoms
+thermo_modify norm yes
+thermo_modify lost ignore flush yes
+thermo 500
+#=================================================================
+#======fix the region to be heated==========================
+fix walltop amo wall/lj126 zhi EDGE 1.0 1.0 1.0 units lattice
+
+fix		heat amo nvt temp 300.0 3000.0 $(100.0*dt)
+run 50000
+unfix heat
+
+fix cool amo nvt temp 3000.0 200.0 $(100.0*dt)
+run 220000
+unfix cool
+unfix walltop
+#=========================================================
+#You can not preform npt with fixed BC so we write a data file to be read in by read and relax
+
+write_dump all atom mydump.atom
+write_data asi.dat

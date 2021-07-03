@@ -1,0 +1,33 @@
+clear
+units 		metal
+dimension 	3
+boundary 	p p p
+atom_style 	atomic
+atom_modify map array
+variable dt equal 0.002
+lattice  	diamond 5.43
+#=========READ IN DATA========================================
+
+read_data asi.dat
+region amorphous block EDGE EDGE EDGE EDGE 2.0 EDGE
+group amo region amorphous
+#=====SET POTENTIAL===============================================
+pair_style	tersoff
+pair_coeff	* * ./lammps-29Oct20/potentials/si.tersoff Si
+
+neighbor	0.5 bin
+neigh_modify delay 10
+
+timestep 0.001
+thermo_style	custom step temp etotal pe vol density atoms
+thermo 100
+
+fix relax amo npt temp 300.0 300.0 $(100.0*dt) iso 0.0 0.0 2
+run 50000
+unfix relax
+
+fix 2cool all nvt temp 300.0 100.0 $(100.0*dt)
+run 3700
+unfix 2cool
+
+write_dump all atom relax.atom
