@@ -4,30 +4,36 @@ dimension 	3
 boundary 	p p p
 atom_style 	atomic
 atom_modify map array
-variable dt equal 0.002
+variable dt equal 0.001
 lattice  	diamond 5.43
 #=========READ IN DATA========================================
 
 read_data asi.dat
-region amorphous block EDGE EDGE EDGE EDGE 2.0 EDGE
+region amorphous block EDGE EDGE EDGE EDGE 4.0 EDGE units lattice
 group amo region amorphous
-#=====SET POTENTIAL===============================================
-pair_style	tersoff
-pair_coeff	* * ./lammps-29Oct20/potentials/si.tersoff Si
+#=============Potential=================================================
 
-neighbor	0.5 bin
+pair_style 	quip
+pair_coeff 	* * gap_example.xml "Potential xml_label=GAP_2015_2_20_0_10_54_35_765" 14
+
+#=========Modify Neighbors=================================
+neighbor	0.3 bin
 neigh_modify delay 10
 
-timestep 0.001
 thermo_style	custom step temp etotal pe vol density atoms
 thermo 100
 
-fix relax amo npt temp 300.0 300.0 $(100.0*dt) iso 0.0 0.0 2
-run 50000
-unfix relax
+#==Perform global relaxation in the NPT ensemble=====
+fix		relax all npt temp 200.0 50.0 0.1 z 0.0 0.0 1.0 drag 0.2
+run 		150000 #was 1400000 for 1000-9 sample #23000000 #was 1000000
+unfix		relax
 
-fix 2cool all nvt temp 300.0 100.0 $(100.0*dt)
-run 3700
-unfix 2cool
+fix		1 all langevin 50.0 0.0 0.1 16450
+fix		2 all nve
+run		50000
+unfix		1
+unfix		2
 
-write_dump all atom relax.atom
+
+# --------- Dump xyz file with atoms of only the final state ------------
+write_dump	all atom testSnapshot.xyz
