@@ -16,6 +16,6 @@
 
 # Outputs
 #SBATCH -o 'outputs/haswell_4nodes_32tasks_1thread_%j_%t.output' #File to which STDOUT will be written
-#SBATCH --mail-user="Zeke????@ucdavis.edu"
+#SBATCH --mail-user="amdiggs@ucdavis.edu"
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
