@@ -12,7 +12,7 @@
 # SBATCH -c 2
 #SBATCH --mem=0   # max memory haswell is 118G, knl is 87G
 #SBATCH -t 1-12:00                      # Runtime in D-HH:MM format
-#SBATCH --array=1-9
+#SBATCH --array=1-3
 
 # Outputs
 #SBATCH -o 'outputs/haswell_4nodes_32tasks_1thread_%j_%t.output' #File to which STDOUT will be written
